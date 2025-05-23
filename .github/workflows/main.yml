@@ -7,7 +7,6 @@ on:
       - master
   pull_request:
   workflow_dispatch:
-  
 jobs:
   build:
     name: Build Vote App
@@ -61,6 +60,4 @@ jobs:
     - name: Push Docker image to DockerHub
       run: |
         COMMIT_HASH=$(echo ${{ github.sha }} | cut -c1-7)
-        docker tag docker.io/${{ vars.DOCKERHUB_USERNAME }}/vote:$COMMIT_HASH docker.io/${{ vars.DOCKERHUB_USERNAME }}/sysfoo:latest
         docker push docker.io/${{ vars.DOCKERHUB_USERNAME }}/vote:$COMMIT_HASH
-        docker push docker.io/${{ vars.DOCKERHUB_USERNAME }}/vote:latest
