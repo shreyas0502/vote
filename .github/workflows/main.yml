@@ -1,0 +1,65 @@
+name: CI Pipeline for Vote App
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  pull_request:
+
+jobs:
+  build:
+    name: Build Vote App
+    runs-on: ubuntu-latest
+    container:
+      image: python:alpine3.17
+      options: --user root
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+  test:
+    name: Run Unit Tests
+    runs-on: ubuntu-latest
+    container:
+      image: python:alpine3.17
+      options: --user root
+    needs: build
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Placeholder for tests
+        run: echo 'Placeholder to run nosetests -v'
+
+  docker_bnp:
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Build and test Docker image
+      run: |
+        COMMIT_HASH=$(echo ${{ github.sha }} | cut -c1-7)
+        docker build -t docker.io/${{ vars.DOCKERHUB_USERNAME }}/vote:$COMMIT_HASH -f Dockerfile .
+
+    - name: Log in to DockerHub Container Registry
+      uses: docker/login-action@v2
+      with:
+        registry: docker.io
+        username: ${{ vars.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+    - name: Push Docker image to DockerHub
+      run: |
+        COMMIT_HASH=$(echo ${{ github.sha }} | cut -c1-7)
+        docker tag docker.io/${{ vars.DOCKERHUB_USERNAME }}/vote:$COMMIT_HASH docker.io/${{ vars.DOCKERHUB_USERNAME }}/sysfoo:latest
+        docker push docker.io/${{ vars.DOCKERHUB_USERNAME }}/vote:$COMMIT_HASH
+        docker push docker.io/${{ vars.DOCKERHUB_USERNAME }}/vote:latest
